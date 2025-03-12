@@ -9,7 +9,7 @@ Below is a structured approach to designing these AI agents, focusing on **scala
 ## **1. Agent-Based System Design**
 ### **1.1 Core Agents and Their Roles**
 Each agent will specialize in a specific function and communicate within a multi-agent framework. This modularity ensures efficiency, scalability, and flexibility in integrating the system into different AI workflows.
-```text
+
 | **Agent**                     | **Primary Function** |
 |--------------------------------|----------------------|
 | **Ambiguity Detection Agent**  | Identifies vague, ambiguous, or unclear statements and proposes clarifying questions. |
@@ -18,7 +18,7 @@ Each agent will specialize in a specific function and communicate within a multi
 | **Contextual Sensitivity Agent** | Adjusts strictness based on user preferences and domain-specific requirements (e.g., academic, casual, legal). |
 | **Rewriting & Refinement Agent** | Suggests alternative phrasings for improved clarity, precision, or neutrality. |
 | **User Adaptation & Feedback Agent** | Learns user preferences and refines agent behavior over time based on feedback. |
-```
+
 ---
 
 ## **2. Multi-Agent Workflow & Communication**
@@ -148,4 +148,6 @@ This allows **modular updates**—individual components can improve over time.
 
 ## **Conclusion**
 By structuring **multi-agent AI workflows**, we can **enhance language clarity, reduce bias, and improve AI-generated content integrity**. Instead of enforcing rigid language policies, this system acts as an **interactive communication assistant**, prompting users (and AI itself) toward more **thoughtful, precise, and fair language**.
+
+---
 
