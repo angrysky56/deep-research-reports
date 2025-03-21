@@ -106,3 +106,9 @@ def contingency_degradation(td_learner, memory_system, cue, background_reward_pr
 - Cognitive architectures emphasizing predictive accuracy and context awareness.
 
 This dopamine-inspired reward system thus creates an efficient and flexible approach for AI memory management, closely aligning with biological principles discussed in your provided study.
+
+### **References:**
+https://www.researchgate.net/publication/378013850_The_role_of_prospective_contingency_in_the_control_of_behavior_and_dopamine_signals_during_associative_learning
+
+Synaptic architecture of a memory engram in the mouse hippocampus.
+https://www.biorxiv.org/content/10.1101/2024.04.23.590812v1.full.pdf
