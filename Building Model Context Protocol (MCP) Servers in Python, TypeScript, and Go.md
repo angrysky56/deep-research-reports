@@ -1,7 +1,7 @@
 
 # Building Model Context Protocol (MCP) Servers in Python, TypeScript, and Go
 
-Model Context Protocol (MCP) servers allow you to expose data and functionality to AI applications in a standardized way. An MCP server acts like an API for LLMs: it can provide **Resources** (readable data), **Tools** (executable functions), and **Prompts** (pre-defined templates) that an AI assistant can use ([GitHub - modelcontextprotocol/python-sdk: The official Python SDK for Model Context Protocol servers and clients](https://github.com/modelcontextprotocol/python-sdk#:~:text=The%20Model%20Context%20Protocol%20,MCP%20servers%20can)). In this guide, we’ll outline how to structure and build general-purpose MCP servers in **Python**, **TypeScript**, and **Go**, with step-by-step setup, key packages, and best practices for maintainable projects.
+Model Context Protocol (MCP) servers allow you to expose data and functionality to AI applications in a standardized way. An MCP server acts like an API for LLMs: it can provide **Resources** (readable data), **Tools** (executable functions), and **Prompts** (pre-defined templates) that an AI assistant can use [GitHub - modelcontextprotocol/python-sdk: The official Python SDK for Model Context Protocol servers and clients](https://github.com/modelcontextprotocol/python-sdk#:~:text=The%20Model%20Context%20Protocol%20,MCP%20servers%20can). In this guide, we’ll outline how to structure and build general-purpose MCP servers in **Python**, **TypeScript**, and **Go**, with step-by-step setup, key packages, and best practices for maintainable projects.
 
 ## Python MCP Server
 
@@ -20,7 +20,7 @@ my_mcp_server/
 └── README.md                  # Documentation and usage
 ```
 
-**Setup & Installation:** Ensure **Python 3.10+** is installed ([For Server Developers - Model Context Protocol](https://modelcontextprotocol.io/quickstart#:~:text=System%20requirements)). Install the official MCP SDK (`mcp` package) and any other needed libraries. The MCP Python SDK (version 1.2.0 or higher) provides the core server and client functionality. You can use [Astral UV](https://astral.sh) (a project manager) as recommended by Anthropic, or pip/venv directly:
+**Setup & Installation:** Ensure **Python 3.10+** is installed [For Server Developers - Model Context Protocol](https://modelcontextprotocol.io/quickstart#:~:text=System%20requirements). Install the official MCP SDK (`mcp` package) and any other needed libraries. The MCP Python SDK (version 1.2.0 or higher) provides the core server and client functionality. You can use [Astral UV](https://astral.sh) (a project manager) as recommended by Anthropic, or pip/venv directly:
 
 - *Using **uv***: Initialize a project and add MCP:
 
@@ -30,7 +30,7 @@ my_mcp_server/
   uv add "mcp[cli]"
   ```
 
-  This ensures the CLI tools are included (via the `mcp[cli]` extra) ([GitHub - modelcontextprotocol/python-sdk: The official Python SDK for Model Context Protocol servers and clients](https://github.com/modelcontextprotocol/python-sdk#:~:text=Then%20add%20MCP%20to%20your,project%20dependencies)).
+  This ensures the CLI tools are included (via the `mcp[cli]` extra) [GitHub - modelcontextprotocol/python-sdk: The official Python SDK for Model Context Protocol servers and clients](https://github.com/modelcontextprotocol/python-sdk#:~:text=Then%20add%20MCP%20to%20your,project%20dependencies).
 
 - *Using **pip***:
 
@@ -41,7 +41,7 @@ my_mcp_server/
 
   This installs the `mcp` SDK and its CLI tool. (The CLI provides handy commands like `mcp run` and `mcp dev` for development.)
 
-**Writing the Server:** Use the `FastMCP` class from the `mcp.server` module to create your server instance. Then register tools, resources, and prompts using decorators or methods. The MCP SDK uses Python type hints and docstrings to auto-generate the JSON schema for tools, making development easier ([For Server Developers - Model Context Protocol](https://modelcontextprotocol.io/quickstart#:~:text=USER_AGENT%20%3D%20%22weather)). For example:
+**Writing the Server:** Use the `FastMCP` class from the `mcp.server` module to create your server instance. Then register tools, resources, and prompts using decorators or methods. The MCP SDK uses Python type hints and docstrings to auto-generate the JSON schema for tools, making development easier [For Server Developers - Model Context Protocol](https://modelcontextprotocol.io/quickstart#:~:text=USER_AGENT%20%3D%20%22weather). For example:
 
 ```python
 # server.py
@@ -66,7 +66,7 @@ if __name__ == "__main__":
     mcp.run()  # Start the server (opens STDIO transport by default)
 ```
 
-In this example, the `@mcp.tool()` decorator registers the `add` function as an MCP Tool. The function’s signature and docstring serve as the schema and description for the tool ([For Server Developers - Model Context Protocol](https://modelcontextprotocol.io/quickstart#:~:text=USER_AGENT%20%3D%20%22weather)). Similarly, `@mcp.resource("greeting://{name}")` registers a Resource accessible via the URI pattern `greeting://{name}`. We call `mcp.run()` in the `__main__` block to launch the server when the script is executed directly ([GitHub - modelcontextprotocol/python-sdk: The official Python SDK for Model Context Protocol servers and clients](https://github.com/modelcontextprotocol/python-sdk#:~:text=mcp%20%3D%20FastMCP%28)). The `FastMCP("DemoServer")` initializer sets the server’s name (and uses default protocol version and capabilities).
+In this example, the `@mcp.tool()` decorator registers the `add` function as an MCP Tool. The function’s signature and docstring serve as the schema and description for the tool [For Server Developers - Model Context Protocol](https://modelcontextprotocol.io/quickstart#:~:text=USER_AGENT%20%3D%20%22weather). Similarly, `@mcp.resource("greeting://{name}")` registers a Resource accessible via the URI pattern `greeting://{name}`. We call `mcp.run()` in the `__main__` block to launch the server when the script is executed directly [GitHub - modelcontextprotocol/python-sdk: The official Python SDK for Model Context Protocol servers and clients](https://github.com/modelcontextprotocol/python-sdk#:~:text=mcp%20%3D%20FastMCP%28). The `FastMCP("DemoServer")` initializer sets the server’s name (and uses default protocol version and capabilities).
 
 **Running & Testing:** During development, you can run the server directly or use the MCP CLI for extra features:
 
@@ -104,17 +104,17 @@ In this example, the `@mcp.tool()` decorator registers the `add` function as an 
 
   This configuration tells Claude to launch your server by running the `server.py` with `uv` in the given project directory ([For Server Developers - Model Context Protocol](https://modelcontextprotocol.io/quickstart#:~:text=%7B%20,)) ([For Server Developers - Model Context Protocol](https://modelcontextprotocol.io/quickstart#:~:text=This%20tells%20Claude%20for%20Desktop%3A)). If not using uv, you can set `"command": "python"` and appropriate `"args"` (including the full path to your `server.py`). Save the config and restart Claude. The server will be started on-demand and its tools/resources will appear to the AI assistant.
 
-**Core Packages and Tools:** The core dependency is the **`mcp` SDK** (often installed as `mcp[cli]` for development). The MCP SDK handles the JSON-RPC protocol, message routing, and STDIO/SSE transports for you ([GitHub - modelcontextprotocol/python-sdk: The official Python SDK for Model Context Protocol servers and clients](https://github.com/modelcontextprotocol/python-sdk#:~:text=The%20Model%20Context%20Protocol%20allows,specification%2C%20making%20it%20easy%20to)). In Python, you might also use:
+**Core Packages and Tools:** The core dependency is the **`mcp` SDK** (often installed as `mcp[cli]` for development). The MCP SDK handles the JSON-RPC protocol, message routing, and STDIO/SSE transports for you [GitHub - modelcontextprotocol/python-sdk: The official Python SDK for Model Context Protocol servers and clients](https://github.com/modelcontextprotocol/python-sdk#:~:text=The%20Model%20Context%20Protocol%20allows,specification%2C%20making%20it%20easy%20to). In Python, you might also use:
 
-- **Astral UV** (`uv`): A project/env manager that simplifies dependency management and running (as used in official quickstarts) – optional but useful ([GitHub - modelcontextprotocol/python-sdk: The official Python SDK for Model Context Protocol servers and clients](https://github.com/modelcontextprotocol/python-sdk#:~:text=We%20recommend%20using%20uv%20to,manage%20your%20Python%20projects)).
+- **Astral UV** (`uv`): A project/env manager that simplifies dependency management and running (as used in official quickstarts) – optional but useful [GitHub - modelcontextprotocol/python-sdk: The official Python SDK for Model Context Protocol servers and clients](https://github.com/modelcontextprotocol/python-sdk#:~:text=We%20recommend%20using%20uv%20to,manage%20your%20Python%20projects).
 - **Async libraries**: If your server calls external APIs or performs I/O, you can use libraries like `httpx` (as in the weather example) or `asyncio`. The MCP SDK supports async tool functions seamlessly (you can define `async def` tools and use `await` inside).
 - **Any other needed SDKs**: e.g. database drivers, cloud SDKs, etc., depending on what your Tools do. Keep these in `requirements.txt` or `pyproject.toml` and load config (like API keys) via environment variables or a `.env` file (you can use `python-dotenv` or similar to load them).
 
 **Best Practices (Python):**
 
 - *Project layout*: As your server grows, keep it organized. You can define many tools/resources in one file, but it’s cleaner to split them into modules (as illustrated above) and **import** them in the main script to register with the `FastMCP` instance. This separation makes maintenance easier.
-- *Documentation*: Use docstrings on your tool and resource functions. These serve a dual purpose: they document the function for developers *and* are exposed to AI clients as the description of the capability ([For Server Developers - Model Context Protocol](https://modelcontextprotocol.io/quickstart#:~:text=USER_AGENT%20%3D%20%22weather)). Write clear, concise docstrings explaining what the tool/resource does.
-- *Type hints*: Leverage Python type hints for function parameters and return values. The SDK will include these types in the schema it exposes to the client, which helps the AI (or any client) understand what inputs are expected ([For Server Developers - Model Context Protocol](https://modelcontextprotocol.io/quickstart#:~:text=USER_AGENT%20%3D%20%22weather)).
+- *Documentation*: Use docstrings on your tool and resource functions. These serve a dual purpose: they document the function for developers *and* are exposed to AI clients as the description of the capability [For Server Developers - Model Context Protocol](https://modelcontextprotocol.io/quickstart#:~:text=USER_AGENT%20%3D%20%22weather). Write clear, concise docstrings explaining what the tool/resource does.
+- *Type hints*: Leverage Python type hints for function parameters and return values. The SDK will include these types in the schema it exposes to the client, which helps the AI (or any client) understand what inputs are expected [For Server Developers - Model Context Protocol](https://modelcontextprotocol.io/quickstart#:~:text=USER_AGENT%20%3D%20%22weather).
 - *Startup and teardown*: If your server needs initialization (database connections, etc.), you can use the MCP lifespan hooks. For example, `FastMCP` can be used as an async context manager or you can register startup/shutdown events. Ensure any resources (file handles, network connections) are properly closed on server shutdown.
 - *Error handling*: Tools should handle exceptions and return friendly error messages rather than crashing. For example, catch exceptions in a tool and return an error string or a structured error result. This prevents unhandled errors from stopping the MCP server.
 - *Security*: Remember that Tools can execute code or perform actions. Only expose what’s necessary and handle user inputs carefully to avoid dangerous operations. The MCP framework requires user approval for tool use, but you should still validate inputs (e.g., if a tool executes system commands or database queries, sanitize inputs).
@@ -232,7 +232,7 @@ Larger projects should delegate the registration of tools/resources to separate 
   }
   ```
 
-  This points Claude to your built server JS file [For Server Developers - Model Context Protocol](https://modelcontextprotocol.io/quickstart#:~:text=match%20at%20L1101%20,). (Use absolute paths; on Windows, use the appropriate path format ([For Server Developers - Model Context Protocol](https://modelcontextprotocol.io/quickstart#:~:text=match%20at%20L1127%20,C%3A%5C%5CPATH%5C%5CTO%5C%5CPARENT%5C%5CFOLDER%5C%5Cweather%5C%5Cbuild%5C%5Cindex.js). After updating the config and restarting Claude, it will launch your Node process when needed. Ensure that Node is in your system PATH or specify the full path to the Node binary in the config if needed.
+  This points Claude to your built server JS file [For Server Developers - Model Context Protocol](https://modelcontextprotocol.io/quickstart#:~:text=match%20at%20L1101%20,). (Use absolute paths; on Windows, use the appropriate path format [For Server Developers - Model Context Protocol](https://modelcontextprotocol.io/quickstart#:~:text=match%20at%20L1127%20,C%3A%5C%5CPATH%5C%5CTO%5C%5CPARENT%5C%5CFOLDER%5C%5Cweather%5C%5Cbuild%5C%5Cindex.js). After updating the config and restarting Claude, it will launch your Node process when needed. Ensure that Node is in your system PATH or specify the full path to the Node binary in the config if needed.
 
 **Core Packages and SDKs:** The main package is the **`@modelcontextprotocol/sdk`** – it includes both client and server support for MCP in TypeScript [GitHub - modelcontextprotocol/typescript-sdk: The official Typescript SDK for Model Context Protocol servers and clients](https://github.com/modelcontextprotocol/typescript-sdk#:~:text=Installation). Key parts of this SDK used for servers:
 
@@ -408,10 +408,22 @@ When creating a general-purpose MCP server, keep it modular and configurable so 
 
 **Sources:**
 
-- Anthropic, *Model Context Protocol (MCP) Introduction and Quickstart* [GitHub - modelcontextprotocol/python-sdk: The official Python SDK for Model Context Protocol servers and clients](https://github.com/modelcontextprotocol/python-sdk#:~:text=The%20Model%20Context%20Protocol%20,MCP%20servers%20can) [For Server Developers - Model Context Protocol](https://modelcontextprotocol.io/quickstart#:~:text=USER_AGENT%20%3D%20%22weather) [For Server Developers - Model Context Protocol](https://modelcontextprotocol.io/quickstart#:~:text=%7B%20,)
-- Anthropic, *MCP Python SDK Documentation* [GitHub - modelcontextprotocol/python-sdk: The official Python SDK for Model Context Protocol servers and clients](https://github.com/modelcontextprotocol/python-sdk#:~:text=Then%20add%20MCP%20to%20your,project%20dependencies) [GitHub - modelcontextprotocol/python-sdk: The official Python SDK for Model Context Protocol servers and clients](https://github.com/modelcontextprotocol/python-sdk#:~:text=mcp%20%3D%20FastMCP%28))
-- Anthropic, *MCP TypeScript SDK Documentation* [GitHub - modelcontextprotocol/typescript-sdk: The official Typescript SDK for Model Context Protocol servers and clients](https://github.com/modelcontextprotocol/typescript-sdk#:~:text=import%20,zod) [GitHub - modelcontextprotocol/typescript-sdk: The official Typescript SDK for Model Context Protocol servers and clients](https://github.com/modelcontextprotocol/typescript-sdk#:~:text=%2F%2F%20Add%20an%20addition%20tool,)
-- Builder.io, *“How to Build Your Own MCP Server”* (TypeScript example and best practices) [How to Build Your Own MCP Server](https://www.builder.io/blog/mcp-server#:~:text=,functions%20are%20called%3A%20These) [How to Build Your Own MCP Server](https://www.builder.io/blog/mcp-server#:~:text=npx%20%40modelcontextprotocol%2Finspector%20node%20)
-- Dev.to (Navendu Pottekkat), *“Building an MCP Server in Go”* (using mcp-go SDK) [Building a Model Context Protocol (MCP) Server in Go - DEV Community](https://dev.to/pottekkat/building-a-model-context-protocol-mcp-server-in-go-4314#:~:text=func%20main%28%29%20,05%2Fserver%2Ftools%23capabilities) [Building a Model Context Protocol (MCP) Server in Go - DEV Community](https://dev.to/pottekkat/building-a-model-context-protocol-mcp-server-in-go-4314#:~:text=s,string))
-- GitHub: *3mdistal/css-mcp-server* (TypeScript project example) [GitHub - 3mdistal/css-mcp-server: A demo of how to build an MCP server (without just vibe coding).](https://github.com/3mdistal/css-mcp-server#:~:text=4,the%20TypeScript%20code) [For Server Developers - Model Context Protocol](https://modelcontextprotocol.io/quickstart#:~:text=match%20at%20L1101%20,))
-- GitHub: *riza-io/mcp-go* (Go SDK README and example) [GitHub - riza-io/mcp-go: Build Model Context Protocol (MCP) servers in Go](https://github.com/riza-io/mcp-go#:~:text=func%20%28s%20,%7D%2C%20%7D%29%2C%20nil) [GitHub - riza-io/mcp-go: Build Model Context Protocol (MCP) servers in Go](https://github.com/riza-io/mcp-go#:~:text=You%20can%20compile%20this%20example,or%20any%20other%20MCP%20client)
+- Anthropic, *Model Context Protocol (MCP) Introduction and Quickstart*
+- [GitHub - modelcontextprotocol/python-sdk: The official Python SDK for Model Context Protocol servers and clients](https://github.com/modelcontextprotocol/python-sdk#:~:text=The%20Model%20Context%20Protocol%20,MCP%20servers%20can) [For Server Developers - Model Context Protocol](https://modelcontextprotocol.io/quickstart#:~:text=USER_AGENT%20%3D%20%22weather)
+-  [For Server Developers - Model Context Protocol](https://modelcontextprotocol.io/quickstart#:~:text=%7B%20,)
+- Anthropic, *MCP Python SDK Documentation*
+- [GitHub - modelcontextprotocol/python-sdk: The official Python SDK for Model Context Protocol servers and clients](https://github.com/modelcontextprotocol/python-sdk#:~:text=Then%20add%20MCP%20to%20your,project%20dependencies)
+- [GitHub - modelcontextprotocol/python-sdk: The official Python SDK for Model Context Protocol servers and clients](https://github.com/modelcontextprotocol/python-sdk#:~:text=mcp%20%3D%20FastMCP%28))
+- Anthropic, *MCP TypeScript SDK Documentation*
+- [GitHub - modelcontextprotocol/typescript-sdk: The official Typescript SDK for Model Context Protocol servers and clients](https://github.com/modelcontextprotocol/typescript-sdk#:~:text=import%20,zod)
+- [GitHub - modelcontextprotocol/typescript-sdk: The official Typescript SDK for Model Context Protocol servers and clients](https://github.com/modelcontextprotocol/typescript-sdk#:~:text=%2F%2F%20Add%20an%20addition%20tool,)
+- Builder.io, *“How to Build Your Own MCP Server”* (TypeScript example and best practices)
+- [How to Build Your Own MCP Server](https://www.builder.io/blog/mcp-server#:~:text=,functions%20are%20called%3A%20These) [How to Build Your Own MCP Server](https://www.builder.io/blog/mcp-server#:~:text=npx%20%40modelcontextprotocol%2Finspector%20node%20)
+- Dev.to (Navendu Pottekkat), *“Building an MCP Server in Go”* (using mcp-go SDK)
+- [Building a Model Context Protocol (MCP) Server in Go - DEV Community](https://dev.to/pottekkat/building-a-model-context-protocol-mcp-server-in-go-4314#:~:text=func%20main%28%29%20,05%2Fserver%2Ftools%23capabilities)
+- [Building a Model Context Protocol (MCP) Server in Go - DEV Community](https://dev.to/pottekkat/building-a-model-context-protocol-mcp-server-in-go-4314#:~:text=s,string))
+- GitHub: *3mdistal/css-mcp-server* (TypeScript project example)
+- [GitHub - 3mdistal/css-mcp-server: A demo of how to build an MCP server (without just vibe coding).](https://github.com/3mdistal/css-mcp-server#:~:text=4,the%20TypeScript%20code) [For Server Developers - Model Context Protocol](https://modelcontextprotocol.io/quickstart#:~:text=match%20at%20L1101%20,))
+- GitHub: *riza-io/mcp-go* (Go SDK README and example)
+- [GitHub - riza-io/mcp-go: Build Model Context Protocol (MCP) servers in Go](https://github.com/riza-io/mcp-go#:~:text=func%20%28s%20,%7D%2C%20%7D%29%2C%20nil)
+- [GitHub - riza-io/mcp-go: Build Model Context Protocol (MCP) servers in Go](https://github.com/riza-io/mcp-go#:~:text=You%20can%20compile%20this%20example,or%20any%20other%20MCP%20client)
