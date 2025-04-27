@@ -54,10 +54,12 @@ Operating system-specific requirements and installation notes:
     * MS-Build Support for LLVM (clang-cl) toolset  
   * These selections should automatically install the necessary tools, including CMake and the correct Clang version.7  
 * **Linux (Debian/Ubuntu):**  
-  * A script is provided to facilitate the installation of the required Clang version. Execute the following command in your terminal 7:  
-    Bash  
-    bash \-c "$(wget \-O \- https://apt.llvm.org/llvm.sh)"
-
+  * A script is provided to facilitate the installation of the required Clang version. Execute the following command in your terminal 7:
+    
+```bash  
+ bash \-c "$(wget \-O \- https://apt.llvm.org/llvm.sh)"
+```
+    
   * Follow the prompts from the script to install Clang 18 (or the latest version specified by the script).
 
 Meeting these specific version requirements, especially for CMake and Clang, is critical. Using older versions may lead to compilation errors or unexpected behavior. The provided installation methods (Visual Studio Installer, llvm.sh script) are the recommended ways to ensure compatibility.7
@@ -67,10 +69,10 @@ Meeting these specific version requirements, especially for CMake and Clang, is 
 To obtain the source code, clone the official repository from GitHub. It is essential to use the \--recursive flag to ensure that required submodules (such as ggml, inherited from the llama.cpp base) are also downloaded. Failure to clone recursively is a common source of build errors.7  
 Execute the following commands in your terminal:
 
-Bash
-
+```bash
 git clone \--recursive https://github.com/microsoft/BitNet.git  
 cd BitNet
+```
 
 This will download the repository into a directory named BitNet and navigate into it.7 The presence of the \--recursive flag ensures that dependencies defined in the .gitmodules file 7 are properly fetched.
 
@@ -78,18 +80,22 @@ This will download the repository into a directory named BitNet and navigate int
 
 Once the repository is cloned, set up a dedicated environment (recommended using Conda) and install the necessary Python packages:
 
-1. **Create and activate a Conda environment:**  
-   Bash  
-   conda create \-n bitnet-cpp python=3.9  
-   conda activate bitnet-cpp
+1. **Create and activate a Conda environment:**
+
+```bash  
+conda create \-n bitnet-cpp python=3.9  
+conda activate bitnet-cpp
+```
 
    This creates an isolated environment named bitnet-cpp with the correct Python version.7  
 2. Install Python dependencies:  
    The project includes a requirements.txt file 7 listing the required Python packages. Install them using pip:  
-   Bash  
-   pip install \-r requirements.txt
-
-   This command installs packages like huggingface-hub (for model downloading) and potentially others needed by the utility scripts.7
+   
+ ```bash  
+ pip install \-r requirements.txt
+ ```
+   
+This command installs packages like huggingface-hub (for model downloading) and potentially others needed by the utility scripts.
 
 With the prerequisites met, the repository cloned, and dependencies installed, the environment is ready for building the framework.
 
@@ -102,37 +108,52 @@ The build process for bitnet.cpp involves acquiring a compatible model and using
 The bitnet.cpp framework is designed to work with BitNet models converted to the GGUF format, a file format popularized by llama.cpp for storing quantized models efficiently.7  
 Microsoft provides an official, pre-converted GGUF version of their BitNet b1.58 model on Hugging Face. This is the recommended model to use with bitnet.cpp. You can download it using the huggingface-cli tool (installed via requirements.txt):
 
-Bash
-
+```bash
 huggingface-cli download microsoft/BitNet-b1.58-2B-4T-gguf \--local-dir models/BitNet-b1.58-2B-4T
+```
 
 This command downloads the GGUF model files from the microsoft/BitNet-b1.58-2B-4T-gguf repository on Hugging Face and saves them into a local directory named models/BitNet-b1.58-2B-4T.7  
 Hugging Face hosts other variants of the BitNet b1.58 model, such as microsoft/bitnet-b1.58-2B-4T (containing packed 1.58-bit weights) and microsoft/bitnet-b1.58-2B-4T-bf16 (containing BF16 weights for training/fine-tuning).8 However, these formats are *not* directly compatible with the bitnet.cpp framework. Only the GGUF version (microsoft/BitNet-b1.58-2B-4T-gguf) should be used for inference with bitnet.cpp.7
 
 ### **3.2 Configuring the Environment/Build with setup\_env.py**
 
-Instead of directly invoking cmake and make (or equivalent build commands), bitnet.cpp uses a Python script, setup\_env.py 7, to manage the build configuration and execution.7 This script acts as an orchestrator, likely handling the complexities of setting up CMake with the correct options, potentially related to the specific quantization formats used by the kernels.  
+Instead of directly invoking cmake and make (or equivalent build commands), bitnet.cpp uses a Python script to manage the build configuration and execution.7 This script acts as an orchestrator, likely handling the complexities of setting up CMake with the correct options, potentially related to the specific quantization formats used by the kernels:
+
+```bash
+setup\_env.py
+```
+
 To configure the build for the downloaded GGUF model, run the following command from the root of the BitNet repository directory:
 
-Bash
 
+```bash
 python setup\_env.py \-md models/BitNet-b1.58-2B-4T \-q i2\_s
+```
 
-Let's break down the arguments used in this example 7:
+Let's break down the arguments used in this example:
 
-* \-md models/BitNet-b1.58-2B-4T or \--model\_dir models/BitNet-b1.58-2B-4T: Specifies the path to the directory where the GGUF model files were downloaded.  
-* \-q i2\_s or \--quant\_type i2\_s: Specifies the quantization type the C++ kernels should be compiled for. The value i2\_s is explicitly paired with the recommended BitNet-b1.58-2B-4T-gguf model download in the official documentation.7 While the exact meaning of i2\_s isn't detailed in the available materials, it likely refers to an internal representation used by the bitnet.cpp kernels, possibly indicating a 2-bit storage scheme for the ternary weights and a specific handling of activation scaling (perhaps 's' for symmetric). It is crucial to use the quantization type specified alongside the model download, as using incorrect values could lead to build failures, runtime errors, or suboptimal performance. Developers should treat this as a required setting tied to the specific GGUF model being used.
+ \-md models/BitNet-b1.58-2B-4T or \--model\_dir models/BitNet-b1.58-2B-4T: Specifies the path to the directory where the GGUF model files were downloaded.
+   
+ \-q i2\_s or \--quant\_type i2\_s: Specifies the quantization type the C++ kernels should be compiled for. The value i2\_s is explicitly paired with the recommended BitNet-b1.58-2B-4T-gguf model download in the official documentation.
 
-The use of this Python script signifies that the build process is tightly integrated with the model format and quantization details. Developers should adhere to this workflow rather than attempting a manual CMake configuration, as the script likely handles necessary, non-obvious setup steps.7
+While the exact meaning of i2\_s isn't detailed in the available materials, it likely refers to an internal representation used by the bitnet.cpp kernels, possibly indicating a 2-bit storage scheme for the ternary weights and a specific handling of activation scaling (perhaps 's' for symmetric). 
+
+It is crucial to use the quantization type specified alongside the model download, as using incorrect values could lead to build failures, runtime errors, or suboptimal performance. Developers should treat this as a required setting tied to the specific GGUF model being used.
+
+The use of this Python script signifies that the build process is tightly integrated with the model format and quantization details. Developers should adhere to this workflow rather than attempting a manual CMake configuration, as the script likely handles necessary, non-obvious setup steps.
 
 ### **3.3 Executing the Build**
 
-Running the setup\_env.py script as shown above typically triggers the entire build process.7 The script configures CMake based on the detected environment and provided arguments, and then invokes the underlying build tool (e.g., make, Ninja, or MSBuild) to compile the C++ source code located primarily in the src/ directory.7  
+Running the setup\_env.py script as shown above typically triggers the entire build process. The script configures CMake based on the detected environment and provided arguments, and then invokes the underlying build tool (e.g., make, Ninja, or MSBuild) to compile the C++ source code located primarily in the src/ directory.  
 Upon successful completion, compiled executables for inference and benchmarking should be present within a build directory (the exact location might be a standard build/ subdirectory or another location determined by the setup\_env.py script).
 
 ## **4\. Running Inference with bitnet.cpp**
 
-Once bitnet.cpp is built successfully, you can perform inference using the provided Python wrapper script, run\_inference.py.
+Once bitnet.cpp is built successfully, you can perform inference using the provided Python wrapper script:
+
+```bash
+run\_inference.py.
+```
 
 ### **4.1 Overview of run\_inference.py**
 
@@ -140,8 +161,15 @@ The run\_inference.py script 7 serves as the primary user interface for running 
 
 ### **4.2 Command-Line Arguments**
 
-The run\_inference.py script accepts several arguments to control the inference process. You can view these options by running python run\_inference.py \--help. Key arguments include 7:
+The run\_inference.py script accepts several arguments to control the inference process. You can view these options by running python:
 
+```bash
+run\_inference.py \--help
+```
+
+Key arguments include:
+
+```plaintext
 | Argument | Required? | Description | Default Value |
 | :---- | :---- | :---- | :---- |
 | \-m MODEL, \--model MODEL | Yes | Path to the built/quantized GGUF model file. | N/A |
@@ -152,6 +180,7 @@ The run\_inference.py script accepts several arguments to control the inference 
 | \-temp TEMPERATURE, \--temperature TEMPERATURE | No | Sampling temperature for generation. | (Not specified) |
 | \-cnv, \--conversation | No | Enable conversation mode (for instruct models). | False |
 | \-h, \--help | No | Show the help message and exit. | N/A |
+```
 
 *Note: The default values for CTX\_SIZE and TEMPERATURE are not explicitly stated in the provided usage snippets 7 but may be set within the script or the C++ backend. The BitNet b1.58 model itself has a maximum context length of 4096 tokens.8*
 
@@ -160,14 +189,18 @@ The run\_inference.py script accepts several arguments to control the inference 
 Here are examples of how to use run\_inference.py:
 
 1. Basic Inference (Conversation Mode):  
-   This example uses the model downloaded and built previously, provides a simple prompt, and enables conversation mode, suitable for instruct-tuned models.7 Ensure the path to the model file (ggml-model-i2\_s.gguf) is correct based on where setup\_env.py placed it within the models/BitNet-b1.58-2B-4T directory.  
-   Bash  
-   python run\_inference.py \-m models/BitNet-b1.58-2B-4T/ggml-model-i2\_s.gguf \-p "You are a helpful assistant" \-cnv
+   This example uses the model downloaded and built previously, provides a simple prompt, and enables conversation mode, suitable for instruct-tuned models. Ensure the path to the model file (ggml-model-i2\_s.gguf) is correct based on where setup\_env.py placed it within the models/BitNet-b1.58-2B-4T directory.
+   
+```bash  
+python run\_inference.py \-m models/BitNet-b1.58-2B-4T/ggml-model-i2\_s.gguf \-p "You are a helpful assistant" \-cnv
+```
 
-2. Inference with Custom Parameters:  
-   This example specifies the number of tokens to generate, the number of threads to use, and a sampling temperature.  
-   Bash  
-   python run\_inference.py \-m models/BitNet-b1.58-2B-4T/ggml-model-i2\_s.gguf \-p "Explain the concept of 1-bit LLMs in simple terms." \-n 256 \-t 4 \-temp 0.7
+3. Inference with Custom Parameters:  
+   This example specifies the number of tokens to generate, the number of threads to use, and a sampling temperature.
+   
+```bash  
+python run\_inference.py \-m models/BitNet-b1.58-2B-4T/ggml-model-i2\_s.gguf \-p "Explain the concept of 1-bit LLMs in simple terms." \-n 256 \-t 4 \-temp 0.7
+```
 
 Adjust the parameters based on your specific needs and hardware capabilities. Increasing the number of threads (-t) can improve performance on multi-core CPUs, up to the number of available physical cores.
 
@@ -177,12 +210,13 @@ To evaluate the inference speed and efficiency of bitnet.cpp on your specific ha
 
 ### **5.1 Overview of utils/e2e\_benchmark.py**
 
-The e2e\_benchmark.py script, located in the utils/ directory 7, is designed to measure the end-to-end performance of the inference process.7 It runs the model with specified parameters and reports metrics like tokens per second, allowing developers to assess the speed under different configurations (e.g., varying thread counts, prompt lengths, or generated token counts).
+The e2e\_benchmark.py script, located in the utils/ directory is designed to measure the end-to-end performance of the inference process. It runs the model with specified parameters and reports metrics like tokens per second, allowing developers to assess the speed under different configurations (e.g., varying thread counts, prompt lengths, or generated token counts).
 
 ### **5.2 Command-Line Arguments**
 
-Similar to the inference script, e2e\_benchmark.py accepts command-line arguments. Run python utils/e2e\_benchmark.py \--help for details. Key arguments include 7:
+Similar to the inference script, e2e\_benchmark.py accepts command-line arguments. Run python utils/e2e\_benchmark.py \--help for details. Key arguments include:
 
+```plaintext
 | Argument | Required? | Description | Default Value |
 | :---- | :---- | :---- | :---- |
 | \-m MODEL, \--model MODEL | Yes | Path to the built/quantized GGUF model file. | N/A |
@@ -190,20 +224,22 @@ Similar to the inference script, e2e\_benchmark.py accepts command-line argument
 | \-p N\_PROMPT, \--n-prompt N\_PROMPT | No | Number of prompt tokens to process. | 512 |
 | \-t THREADS, \--threads THREADS | No | Number of CPU threads to use for benchmark. | 2 |
 | \-h, \--help | No | Show the help message and exit. | N/A |
+```
 
 ### **5.3 Practical Examples**
 
-To run a benchmark test, use a command similar to the following, adjusting the parameters as needed 7:
+To run a benchmark test, use a command similar to the following, adjusting the parameters as needed:
 
-Bash
+```bash
 
 python utils/e2e\_benchmark.py \-m models/BitNet-b1.58-2B-4T/ggml-model-i2\_s.gguf \-n 200 \-p 256 \-t 4
+```
 
 This command benchmarks the specified model, processing a prompt of 256 tokens, generating 200 tokens, and using 4 CPU threads. The output will typically include performance metrics like the time taken and the calculated tokens per second.
 
 ### **5.4 Generating Dummy Models for Benchmarking**
 
-For situations where a full model download is impractical or for specific architectural testing, the repository includes a script named generate-dummy-bitnet-model.py (likely located in the utils/ directory). This script can create placeholder GGUF files that mimic the structure of a real BitNet model, allowing the benchmarking tool to run without requiring access to the actual model weights.7 This can be useful for testing the overhead of the framework itself or for benchmarking on systems without internet access after the initial setup.
+For situations where a full model download is impractical or for specific architectural testing, the repository includes a script named generate-dummy-bitnet-model.py (likely located in the utils/ directory). This script can create placeholder GGUF files that mimic the structure of a real BitNet model, allowing the benchmarking tool to run without requiring access to the actual model weights. This can be useful for testing the overhead of the framework itself or for benchmarking on systems without internet access after the initial setup.
 
 ## **6\. Understanding the Architecture and Design**
 
@@ -223,20 +259,20 @@ The microsoft/BitNet repository follows a reasonably standard structure for a C+
 
 ### **6.2 Core Technologies and Dependencies**
 
-* **Languages:** The performance-critical inference core is implemented in C++, while Python serves as a higher-level interface for setup, execution wrappers, and utility scripts.7 This split leverages C++ for speed and Python for ease of use. Developers aiming to modify the core inference logic will need C++ expertise, whereas using the framework is primarily done via the Python scripts.  
-* **Foundation:** The framework is explicitly built upon llama.cpp 7, inheriting its structure for handling GGUF models and likely adapting its core inference loop. It also incorporates lookup table optimization techniques inspired by T-MAC.7  
+* **Languages:** The performance-critical inference core is implemented in C++, while Python serves as a higher-level interface for setup, execution wrappers, and utility scripts. This split leverages C++ for speed and Python for ease of use. Developers aiming to modify the core inference logic will need C++ expertise, whereas using the framework is primarily done via the Python scripts.  
+* **Foundation:** The framework is explicitly built upon llama.cpp, inheriting its structure for handling GGUF models and likely adapting its core inference loop. It also incorporates lookup table optimization techniques inspired by T-MAC.  
 * **Build System:** CMake is used to configure and manage the C++ build process 7, orchestrated by the setup\_env.py script.
 
 ### **6.3 Implementing BitNet b1.58 Concepts**
 
 The C++ code within src/ and include/ translates the theoretical concepts of BitNet b1.58 10 into executable logic. This involves implementing:
 
-* **Optimized Ternary Operations:** Kernels designed to perform matrix multiplication and other operations efficiently using the {−1,0,1} weights, minimizing actual multiplications.12  
-* **Activation Quantization:** Handling the 8-bit quantization of activations, likely using absmax quantization per token as described in the research.12  
-* **BitLinear Inference Logic:** Implementing the forward pass computations corresponding to the BitLinear layers used during model training.12  
-* **Weight Quantization (Absmean):** While the GGUF model is pre-quantized, the loading process might involve steps related to interpreting or applying the absmean quantization scheme (RoundClip(W/(γ+ϵ),−1,1)) used to generate the ternary weights.12
+* **Optimized Ternary Operations:** Kernels designed to perform matrix multiplication and other operations efficiently using the {−1,0,1} weights, minimizing actual multiplications.  
+* **Activation Quantization:** Handling the 8-bit quantization of activations, likely using absmax quantization per token as described in the research.  
+* **BitLinear Inference Logic:** Implementing the forward pass computations corresponding to the BitLinear layers used during model training.  
+* **Weight Quantization (Absmean):** While the GGUF model is pre-quantized, the loading process might involve steps related to interpreting or applying the absmean quantization scheme (RoundClip(W/(γ+ϵ),−1,1)) used to generate the ternary weights.
 
-Understanding these underlying technical details 12 provides context for the C++ implementation and the optimizations bitnet.cpp aims to achieve.
+Understanding these underlying technical details provides context for the C++ implementation and the optimizations bitnet.cpp aims to achieve.
 
 ### **6.4 Key Code Components (Speculative)**
 
@@ -254,13 +290,14 @@ The docs/ folder remains a potential source of more detailed architectural infor
 ### **7.1 Overview**
 
 For developers using the microsoft/BitNet repository as provided, the primary means of interaction—the effective "API"—is through the command-line interfaces (CLIs) of the Python scripts (setup\_env.py, run\_inference.py, e2e\_benchmark.py).  
-Based on the available documentation and code structure 7, there is **no documented Python library API** (e.g., importable modules for direct function calls) or **C++ library API** (e.g., linkable libraries for integration) exposed for embedding bitnet.cpp inference directly into other applications. Current usage requires executing the provided Python scripts as separate processes. Developers needing deeper integration would likely need to modify the C++ source code to expose a library interface or rely on inter-process communication.
+Based on the available documentation and code structure, there is **no documented Python library API** (e.g., importable modules for direct function calls) or **C++ library API** (e.g., linkable libraries for integration) exposed for embedding bitnet.cpp inference directly into other applications. Current usage requires executing the provided Python scripts as separate processes. Developers needing deeper integration would likely need to modify the C++ source code to expose a library interface or rely on inter-process communication.
 
 ### **7.2 Consolidated Argument Tables**
 
 The following tables consolidate the command-line arguments for the key Python scripts, serving as a quick reference.  
 **run\_inference.py Arguments:**
 
+```plaintext
 | Argument | Required? | Description | Default Value |
 | :---- | :---- | :---- | :---- |
 | \-m MODEL, \--model MODEL | Yes | Path to the built/quantized GGUF model file. | N/A |
@@ -289,8 +326,9 @@ The following tables consolidate the command-line arguments for the key Python s
 | \-md DIR, \--model\_dir DIR | Yes | Path to the directory containing model files. | N/A |
 | \-q TYPE, \--quant\_type TYPE | Yes | Quantization type (e.g., i2\_s). | N/A |
 | \-h, \--help | No | Show the help message and exit. | N/A |
+```
 
-*(Note: setup\_env.py may have additional arguments not shown in the primary examples.7 Use \--help for a full list).*
+*(Note: setup\_env.py may have additional arguments not shown in the primary examples. Use \--help for a full list).*
 
 ## **8\. Contributing to the BitNet Project**
 
