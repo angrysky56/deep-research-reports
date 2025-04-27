@@ -4,32 +4,39 @@
 
 ### **1.1 What is BitNet?**
 
-The landscape of Large Language Models (LLMs) is characterized by models of increasing size and capability, but this growth presents significant challenges for deployment, particularly concerning computational requirements, energy consumption, and inference latency.1 Microsoft Research has addressed these challenges through the development of BitNet, a novel 1-bit LLM architecture designed for efficiency.2  
-The specific variant gaining prominence and supported by the official inference framework is **BitNet b1.58**. This model represents a significant step in efficient LLM design, utilizing ternary weights, meaning each parameter is constrained to one of three values: {−1,0,1}.4 This ternary representation effectively uses approximately 1.58 bits per parameter (since log2​(3)≈1.58).  
-A key claim associated with BitNet b1.58 is its ability to match the performance of traditional full-precision models (using 16-bit formats like FP16 or BF16) of comparable size and trained on similar datasets, assessed through metrics like perplexity and performance on downstream tasks. Crucially, it achieves this parity while offering substantial advantages in computational efficiency.8
+The landscape of Large Language Models (LLMs) is characterized by models of increasing size and capability, but this growth presents significant challenges for deployment, particularly concerning computational requirements, energy consumption, and inference latency.1 Microsoft Research has addressed these challenges through the development of BitNet, a novel 1-bit LLM architecture designed for efficiency.
+
+The specific variant gaining prominence and supported by the official inference framework is **BitNet b1.58**. This model represents a significant step in efficient LLM design, utilizing ternary weights, meaning each parameter is constrained to one of three values: {−1,0,1}.4 This ternary representation effectively uses approximately 1.58 bits per parameter (since log2​(3)≈1.58). 
+
+A key claim associated with BitNet b1.58 is its ability to match the performance of traditional full-precision models (using 16-bit formats like FP16 or BF16) of comparable size and trained on similar datasets, assessed through metrics like perplexity and performance on downstream tasks. Crucially, it achieves this parity while offering substantial advantages in computational efficiency.
 
 ### **1.2 Introducing bitnet.cpp: The Official Inference Framework**
 
-The microsoft/BitNet repository on GitHub hosts the official *inference* framework for BitNet b1.58 models, known internally and commonly referred to as bitnet.cpp.7 Its primary objective is to provide a suite of highly optimized computational kernels specifically designed for *fast and lossless inference* using these 1.58-bit models.7 The initial release focuses on maximizing performance on standard Central Processing Units (CPUs), with future plans to extend support to Neural Processing Units (NPUs) and Graphics Processing Units (GPUs).7  
-It is essential for developers to recognize that the microsoft/BitNet repository contains the *inference engine* (bitnet.cpp), not the code used for training the BitNet models themselves. The BitNet architecture and its training methodologies are detailed in separate research publications.2 While Hugging Face hosts BitNet model weights 8, achieving the significant computational efficiency benefits—speed, reduced memory footprint, and lower energy consumption—demonstrated in the research requires using the dedicated bitnet.cpp framework. Standard LLM libraries like Hugging Face transformers, while potentially capable of loading the model weights, do not incorporate the specialized low-level optimizations present in bitnet.cpp needed to fully leverage the 1.58-bit architecture during inference.8
+The microsoft/BitNet repository on GitHub hosts the official *inference* framework for BitNet b1.58 models, known internally and commonly referred to as bitnet.cpp.7 Its primary objective is to provide a suite of highly optimized computational kernels specifically designed for *fast and lossless inference* using these 1.58-bit models. The initial release focuses on maximizing performance on standard Central Processing Units (CPUs), with future plans to extend support to Neural Processing Units (NPUs) and Graphics Processing Units (GPUs).
+
+It is essential for developers to recognize that the microsoft/BitNet repository contains the *inference engine* (bitnet.cpp), not the code used for training the BitNet models themselves. The BitNet architecture and its training methodologies are detailed in separate research publications.2 While Hugging Face hosts BitNet model weights, achieving the significant computational efficiency benefits—speed, reduced memory footprint, and lower energy consumption—demonstrated in the research requires using the dedicated bitnet.cpp framework. Standard LLM libraries like Hugging Face transformers, while potentially capable of loading the model weights, do not incorporate the specialized low-level optimizations present in bitnet.cpp needed to fully leverage the 1.58-bit architecture during inference.
 
 ### **1.3 Key Benefits and Capabilities**
 
-The bitnet.cpp framework delivers tangible performance improvements for running BitNet b1.58 models on CPUs. Evaluations show significant speedups compared to baseline implementations (implied to be standard llama.cpp given the project's heritage), ranging from 1.37x to 5.07x on ARM CPUs and 2.37x to 6.17x on x86 CPUs, with larger models typically seeing greater gains.7 Alongside speed improvements, bitnet.cpp drastically reduces energy consumption during inference: 55.4% to 70.0% on ARM and 71.9% to 82.2% on x86 CPUs.7  
-These efficiencies enable practical applications previously challenging on CPU-only hardware. For instance, bitnet.cpp can run a 100-billion parameter BitNet b1.58 model on a single CPU, achieving inference speeds comparable to human reading rates (approximately 5-7 tokens per second).7 This capability significantly enhances the feasibility of running powerful LLMs on local devices without specialized accelerators.  
-The framework's foundation lies in the widely adopted llama.cpp project.5 This heritage means bitnet.cpp benefits from the ongoing development and optimizations within the llama.cpp ecosystem. Developers familiar with llama.cpp may find the structure, build process, and command-line interface of bitnet.cpp somewhat familiar. However, it also means that bitnet.cpp might inherit design choices or potential limitations from its base. Additionally, bitnet.cpp incorporates specialized techniques, such as lookup table methodologies pioneered in the T-MAC project, further optimizing its low-bit operations.7
+The bitnet.cpp framework delivers tangible performance improvements for running BitNet b1.58 models on CPUs. Evaluations show significant speedups compared to baseline implementations (implied to be standard llama.cpp given the project's heritage), ranging from 1.37x to 5.07x on ARM CPUs and 2.37x to 6.17x on x86 CPUs, with larger models typically seeing greater gains.7 Alongside speed improvements, bitnet.cpp drastically reduces energy consumption during inference: 55.4% to 70.0% on ARM and 71.9% to 82.2% on x86 CPUs.
+
+These efficiencies enable practical applications previously challenging on CPU-only hardware. For instance, bitnet.cpp can run a 100-billion parameter BitNet b1.58 model on a single CPU, achieving inference speeds comparable to human reading rates (approximately 5-7 tokens per second). This capability significantly enhances the feasibility of running powerful LLMs on local devices without specialized accelerators.
+
+The framework's foundation lies in the widely adopted llama.cpp project.5 This heritage means bitnet.cpp benefits from the ongoing development and optimizations within the llama.cpp ecosystem. Developers familiar with llama.cpp may find the structure, build process, and command-line interface of bitnet.cpp somewhat familiar. However, it also means that bitnet.cpp might inherit design choices or potential limitations from its base. Additionally, bitnet.cpp incorporates specialized techniques, such as lookup table methodologies pioneered in the T-MAC project, further optimizing its low-bit operations.
 
 ### **1.4 Core Technical Concepts (High-Level)**
 
 Understanding the core technical ideas behind BitNet b1.58 is helpful for appreciating how bitnet.cpp functions:
 
-* **Ternary Weights:** As mentioned, the model parameters are restricted to {−1,0,1}.4 This drastically simplifies computation, as matrix multiplication can be performed primarily through additions and subtractions, eliminating most traditional multiplication operations.4  
-* **BitLinear Layer:** The BitNet architecture replaces standard linear layers (e.g., nn.Linear in PyTorch) with a specialized BitLinear layer. This layer is designed during training to work with quantized weights and activations and is fundamental to achieving good performance with 1-bit models.2 The bitnet.cpp framework implements the highly optimized *inference-time* computation for models constructed using these BitLinear layers.  
-* **Quantization:** BitNet employs quantization for both weights (to the ternary {−1,0,1} format, effectively 1.58 bits) and activations (typically quantized to 8-bit integers using techniques like absmax quantization).3 bitnet.cpp contains specialized C++ kernels optimized to execute these quantized operations efficiently on CPUs.7
+* **Ternary Weights:** As mentioned, the model parameters are restricted to {−1,0,1}.4 This drastically simplifies computation, as matrix multiplication can be performed primarily through additions and subtractions, eliminating most traditional multiplication operations.
+  
+* **BitLinear Layer:** The BitNet architecture replaces standard linear layers (e.g., nn.Linear in PyTorch) with a specialized BitLinear layer. This layer is designed during training to work with quantized weights and activations and is fundamental to achieving good performance with 1-bit models.2 The bitnet.cpp framework implements the highly optimized *inference-time* computation for models constructed using these BitLinear layers.
+  
+* **Quantization:** BitNet employs quantization for both weights (to the ternary {−1,0,1} format, effectively 1.58 bits) and activations (typically quantized to 8-bit integers using techniques like absmax quantization).3 bitnet.cpp contains specialized C++ kernels optimized to execute these quantized operations efficiently on CPUs.
 
-The initial focus on CPU inference is a defining characteristic of the current bitnet.cpp release.7 While support for NPUs and GPUs is planned, developers wishing to use the framework today must target CPU environments. The performance metrics and benefits cited are specific to CPU execution.7
+The initial focus on CPU inference is a defining characteristic of the current bitnet.cpp release. While support for NPUs and GPUs is planned, developers wishing to use the framework today must target CPU environments. The performance metrics and benefits cited are specific to CPU execution.
 
-## **2\. Setting Up Your Development Environment**
+## **2. Setting Up Your Development Environment**
 
 Setting up a correct development environment is crucial for building and running bitnet.cpp. The framework has specific dependencies on compilers and build tools.
 
@@ -80,7 +87,7 @@ git clone --recursive https://github.com/microsoft/BitNet.git
 cd BitNet
 ```
 
-This will download the repository into a directory named BitNet and navigate into it.7 The presence of the \--recursive flag ensures that dependencies defined in the .gitmodules file 7 are properly fetched.
+This will download the repository into a directory named BitNet and navigate into it.7 The presence of the --recursive flag ensures that dependencies defined in the .gitmodules file are properly fetched.
 
 ### **2.3 Installing Dependencies**
 
@@ -119,7 +126,10 @@ huggingface-cli download microsoft/BitNet-b1.58-2B-4T-gguf --local-dir models/Bi
 ```
 
 This command downloads the GGUF model files from the microsoft/BitNet-b1.58-2B-4T-gguf repository on Hugging Face and saves them into a local directory named models/BitNet-b1.58-2B-4T.7  
-Hugging Face hosts other variants of the BitNet b1.58 model, such as microsoft/bitnet-b1.58-2B-4T (containing packed 1.58-bit weights) and microsoft/bitnet-b1.58-2B-4T-bf16 (containing BF16 weights for training/fine-tuning).8 However, these formats are *not* directly compatible with the bitnet.cpp framework. Only the GGUF version (microsoft/BitNet-b1.58-2B-4T-gguf) should be used for inference with bitnet.cpp.
+Hugging Face hosts other variants of the BitNet b1.58 model, such as microsoft/bitnet-b1.58-2B-4T (containing packed 1.58-bit weights) and microsoft/bitnet-b1.58-2B-4T-bf16 (containing BF16 weights for training/fine-tuning).
+
+However, these formats are *not* directly compatible with the bitnet.cpp framework. Only the GGUF version (microsoft/BitNet-b1.58-2B-4T-gguf) should be used for inference with bitnet.cpp.
+
 
 ### **3.2 Configuring the Environment/Build with setup_env.py**
 
@@ -154,7 +164,7 @@ The use of this Python script signifies that the build process is tightly integr
 Running the setup\_env.py script as shown above typically triggers the entire build process. The script configures CMake based on the detected environment and provided arguments, and then invokes the underlying build tool (e.g., make, Ninja, or MSBuild) to compile the C++ source code located primarily in the src/ directory.  
 Upon successful completion, compiled executables for inference and benchmarking should be present within a build directory (the exact location might be a standard build/ subdirectory or another location determined by the setup_env.py script).
 
-## **4\. Running Inference with bitnet.cpp**
+## **4. Running Inference with bitnet.cpp**
 
 Once bitnet.cpp is built successfully, you can perform inference using the provided Python wrapper script:
 
@@ -164,11 +174,11 @@ run_inference.py.
 
 ### **4.1 Overview of run_inference.py**
 
-The run\_inference.py script 7 serves as the primary user interface for running the compiled bitnet.cpp inference engine. It takes user input (like the prompt and configuration parameters) via command-line arguments and passes them to the C++ backend, handling the interaction and displaying the generated output. This Python wrapper provides a convenient way to use the optimized C++ core without needing direct C++ interaction for basic inference tasks.7
+The run_inference.py script serves as the primary user interface for running the compiled bitnet.cpp inference engine. It takes user input (like the prompt and configuration parameters) via command-line arguments and passes them to the C++ backend, handling the interaction and displaying the generated output. This Python wrapper provides a convenient way to use the optimized C++ core without needing direct C++ interaction for basic inference tasks.
 
 ### **4.2 Command-Line Arguments**
 
-The run\_inference.py script accepts several arguments to control the inference process. You can view these options by running python:
+The run_inference.py script accepts several arguments to control the inference process. You can view these options by running python:
 
 ```bash
 run_inference.py --help
@@ -189,14 +199,14 @@ Key arguments include:
 | -h, --help | No | Show the help message and exit. | N/A |
 ```
 
-*Note: The default values for CTX\_SIZE and TEMPERATURE are not explicitly stated in the provided usage snippets 7 but may be set within the script or the C++ backend. The BitNet b1.58 model itself has a maximum context length of 4096 tokens.8*
+*Note: The default values for CTX_SIZE and TEMPERATURE are not explicitly stated in the provided usage snippets 7 but may be set within the script or the C++ backend. The BitNet b1.58 model itself has a maximum context length of 4096 tokens.8*
 
 ### **4.3 Practical Examples**
 
-Here are examples of how to use run\_inference.py:
+Here are examples of how to use run_inference.py:
 
 1. Basic Inference (Conversation Mode):  
-   This example uses the model downloaded and built previously, provides a simple prompt, and enables conversation mode, suitable for instruct-tuned models. Ensure the path to the model file (ggml-model-i2_s.gguf) is correct based on where setup\_env.py placed it within the models/BitNet-b1.58-2B-4T directory.
+   This example uses the model downloaded and built previously, provides a simple prompt, and enables conversation mode, suitable for instruct-tuned models. Ensure the path to the model file (ggml-model-i2_s.gguf) is correct based on where setup_env.py placed it within the models/BitNet-b1.58-2B-4T directory.
    
 ```bash  
 python run_inference.py -m models/BitNet-b1.58-2B-4T/ggml-model-i2_s.gguf -p "You are a helpful assistant" -cnv
@@ -211,7 +221,7 @@ python run_inference.py -m models/BitNet-b1.58-2B-4T/ggml-model-i2_s.gguf -p "Ex
 
 Adjust the parameters based on your specific needs and hardware capabilities. Increasing the number of threads (-t) can improve performance on multi-core CPUs, up to the number of available physical cores.
 
-## **5\. Benchmarking Inference Performance**
+## **5. Benchmarking Inference Performance**
 
 To evaluate the inference speed and efficiency of bitnet.cpp on your specific hardware, the project provides a dedicated benchmarking script.
 
@@ -255,18 +265,26 @@ While a deep dive into the C++ codebase is beyond the scope of this guide, under
 
 The microsoft/BitNet repository follows a reasonably standard structure for a C++/Python project 7:
 
-* src/: Contains the core C++ source code for the inference engine, including model loading, quantization logic, kernel implementations, and the main inference loop.  
-* include/: Holds C++ header files defining the interfaces (classes, functions, structures) used by the code in src/.  
-* utils/: Contains Python utility scripts, including setup\_env.py, run\_inference.py, e2e\_benchmark.py, and potentially others like generate-dummy-bitnet-model.py.  
-* docs/: Intended for documentation files. While its existence is confirmed 7, accessing its specific contents was not possible based on the available information.19 It may contain further architectural details or guides.  
-* 3rdparty/: Houses third-party dependencies, managed as Git submodules (e.g., ggml from llama.cpp).  
-* preset\_kernels/: Possibly contains pre-computed data or configurations for optimized computation kernels.  
+* src/: Contains the core C++ source code for the inference engine, including model loading, quantization logic, kernel implementations, and the main inference loop.
+* 
+* include/: Holds C++ header files defining the interfaces (classes, functions, structures) used by the code in src/.
+* 
+* utils/: Contains Python utility scripts, including setup_env.py, run_inference.py, e2e_benchmark.py, and potentially others like generate-dummy-bitnet-model.py.
+*   
+* docs/: Intended for documentation files. While its existence is confirmed 7, accessing its specific contents was not possible based on the available information.19 It may contain further architectural details or guides.
+* 
+* 3rdparty/: Houses third-party dependencies, managed as Git submodules (e.g., ggml from llama.cpp).
+* 
+* preset_kernels/: Possibly contains pre-computed data or configurations for optimized computation kernels.
+*  
 * Root Files: Includes build system files (CMakeLists.txt, .gitmodules), dependency lists (requirements.txt), license (LICENSE), informational files (README.md, CODE\_OF\_CONDUCT.md, SECURITY.md), and configuration (.gitignore).
 
 ### **6.2 Core Technologies and Dependencies**
 
-* **Languages:** The performance-critical inference core is implemented in C++, while Python serves as a higher-level interface for setup, execution wrappers, and utility scripts. This split leverages C++ for speed and Python for ease of use. Developers aiming to modify the core inference logic will need C++ expertise, whereas using the framework is primarily done via the Python scripts.  
-* **Foundation:** The framework is explicitly built upon llama.cpp, inheriting its structure for handling GGUF models and likely adapting its core inference loop. It also incorporates lookup table optimization techniques inspired by T-MAC.  
+* **Languages:** The performance-critical inference core is implemented in C++, while Python serves as a higher-level interface for setup, execution wrappers, and utility scripts. This split leverages C++ for speed and Python for ease of use. Developers aiming to modify the core inference logic will need C++ expertise, whereas using the framework is primarily done via the Python scripts.
+* 
+* **Foundation:** The framework is explicitly built upon llama.cpp, inheriting its structure for handling GGUF models and likely adapting its core inference loop. It also incorporates lookup table optimization techniques inspired by T-MAC.
+* 
 * **Build System:** CMake is used to configure and manage the C++ build process 7, orchestrated by the setup_env.py script.
 
 ### **6.3 Implementing BitNet b1.58 Concepts**
