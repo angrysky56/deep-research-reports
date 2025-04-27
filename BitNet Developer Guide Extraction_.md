@@ -45,32 +45,38 @@ Ensure the following software components are installed on your system:
 Operating system-specific requirements and installation notes:
 
 * **Windows:**  
-  * Install Visual Studio 2022\.  
+  * Install Visual Studio 2022.  
   * During installation via the Visual Studio Installer, ensure the following workloads and components are selected:  
     * Desktop development with C++  
     * C++ CMake Tools for Windows  
     * Git for Windows (if Git is not already installed)  
     * C++ Clang Compiler for Windows (provides the required Clang version)  
     * MS-Build Support for LLVM (clang-cl) toolset  
-  * These selections should automatically install the necessary tools, including CMake and the correct Clang version.7  
-* **Linux (Debian/Ubuntu):**  
-  * A script is provided to facilitate the installation of the required Clang version. Execute the following command in your terminal 7:
+  * These selections should automatically install the necessary tools, including CMake and the correct Clang version.
     
-```bash  
- bash \-c "$(wget \-O \- https://apt.llvm.org/llvm.sh)"
+  * You can check this if you are super serious:
+    
+    [Getting Started with the LLVM System](https://llvm.org/docs/GettingStarted.html#getting-the-source-code-and-building-llvm)
+
+* **Linux (Debian/Ubuntu):**  
+  
+  You are probably going to want to use this [Automatic installation script](https://apt.llvm.org/)
+  
+```bash
+bash -c "$(wget -O - https://apt.llvm.org/llvm.sh)"
 ```
     
   * Follow the prompts from the script to install Clang 18 (or the latest version specified by the script).
 
-Meeting these specific version requirements, especially for CMake and Clang, is critical. Using older versions may lead to compilation errors or unexpected behavior. The provided installation methods (Visual Studio Installer, llvm.sh script) are the recommended ways to ensure compatibility.7
+Meeting these specific version requirements, especially for CMake and Clang, is critical. Using older versions may lead to compilation errors or unexpected behavior. The provided installation methods (Visual Studio Installer, llvm.sh script) are the recommended ways to ensure compatibility.
 
 ### **2.2 Cloning the microsoft/BitNet Repository**
 
-To obtain the source code, clone the official repository from GitHub. It is essential to use the \--recursive flag to ensure that required submodules (such as ggml, inherited from the llama.cpp base) are also downloaded. Failure to clone recursively is a common source of build errors.7  
+To obtain the source code, clone the official repository from GitHub. It is essential to use the --recursive flag to ensure that required submodules (such as ggml, inherited from the llama.cpp base) are also downloaded. Failure to clone recursively is a common source of build errors.
 Execute the following commands in your terminal:
 
 ```bash
-git clone \--recursive https://github.com/microsoft/BitNet.git  
+git clone --recursive https://github.com/microsoft/BitNet.git  
 cd BitNet
 ```
 
@@ -83,23 +89,23 @@ Once the repository is cloned, set up a dedicated environment (recommended using
 1. **Create and activate a Conda environment:**
 
 ```bash  
-conda create \-n bitnet-cpp python=3.9  
+conda create -n bitnet-cpp python=3.9  
 conda activate bitnet-cpp
 ```
 
    This creates an isolated environment named bitnet-cpp with the correct Python version.7  
 2. Install Python dependencies:  
-   The project includes a requirements.txt file 7 listing the required Python packages. Install them using pip:  
+   The project includes a requirements.txt file listing the required Python packages. Install them using pip:  
    
  ```bash  
- pip install \-r requirements.txt
+ pip install -r requirements.txt
  ```
    
 This command installs packages like huggingface-hub (for model downloading) and potentially others needed by the utility scripts.
 
 With the prerequisites met, the repository cloned, and dependencies installed, the environment is ready for building the framework.
 
-## **3\. Building the BitNet Framework (bitnet.cpp)**
+## **3. Building the BitNet Framework (bitnet.cpp)**
 
 The build process for bitnet.cpp involves acquiring a compatible model and using a provided Python script to configure and execute the compilation. This process deviates slightly from standard C++ CMake workflows.
 
@@ -109,34 +115,35 @@ The bitnet.cpp framework is designed to work with BitNet models converted to the
 Microsoft provides an official, pre-converted GGUF version of their BitNet b1.58 model on Hugging Face. This is the recommended model to use with bitnet.cpp. You can download it using the huggingface-cli tool (installed via requirements.txt):
 
 ```bash
-huggingface-cli download microsoft/BitNet-b1.58-2B-4T-gguf \--local-dir models/BitNet-b1.58-2B-4T
+huggingface-cli download microsoft/BitNet-b1.58-2B-4T-gguf --local-dir models/BitNet-b1.58-2B-4T
 ```
 
 This command downloads the GGUF model files from the microsoft/BitNet-b1.58-2B-4T-gguf repository on Hugging Face and saves them into a local directory named models/BitNet-b1.58-2B-4T.7  
-Hugging Face hosts other variants of the BitNet b1.58 model, such as microsoft/bitnet-b1.58-2B-4T (containing packed 1.58-bit weights) and microsoft/bitnet-b1.58-2B-4T-bf16 (containing BF16 weights for training/fine-tuning).8 However, these formats are *not* directly compatible with the bitnet.cpp framework. Only the GGUF version (microsoft/BitNet-b1.58-2B-4T-gguf) should be used for inference with bitnet.cpp.7
+Hugging Face hosts other variants of the BitNet b1.58 model, such as microsoft/bitnet-b1.58-2B-4T (containing packed 1.58-bit weights) and microsoft/bitnet-b1.58-2B-4T-bf16 (containing BF16 weights for training/fine-tuning).8 However, these formats are *not* directly compatible with the bitnet.cpp framework. Only the GGUF version (microsoft/BitNet-b1.58-2B-4T-gguf) should be used for inference with bitnet.cpp.
 
-### **3.2 Configuring the Environment/Build with setup\_env.py**
+### **3.2 Configuring the Environment/Build with setup_env.py**
 
 Instead of directly invoking cmake and make (or equivalent build commands), bitnet.cpp uses a Python script to manage the build configuration and execution.7 This script acts as an orchestrator, likely handling the complexities of setting up CMake with the correct options, potentially related to the specific quantization formats used by the kernels:
 
 ```bash
-setup\_env.py
+setup_env.py
 ```
 
 To configure the build for the downloaded GGUF model, run the following command from the root of the BitNet repository directory:
 
 
 ```bash
-python setup\_env.py \-md models/BitNet-b1.58-2B-4T \-q i2\_s
+python setup_env.py -md models/BitNet-b1.58-2B-4T -q i2_s
 ```
 
 Let's break down the arguments used in this example:
 
- \-md models/BitNet-b1.58-2B-4T or \--model\_dir models/BitNet-b1.58-2B-4T: Specifies the path to the directory where the GGUF model files were downloaded.
+ -md models/BitNet-b1.58-2B-4T or --model_dir models/BitNet-b1.58-2B-4T: Specifies the path to the directory where the GGUF model files were downloaded.
    
- \-q i2\_s or \--quant\_type i2\_s: Specifies the quantization type the C++ kernels should be compiled for. The value i2\_s is explicitly paired with the recommended BitNet-b1.58-2B-4T-gguf model download in the official documentation.
+ -q i2_s or --quant_type i2_s: Specifies the quantization type the C++ kernels should be compiled for. The value i2_s is explicitly paired with the recommended BitNet-b1.58-2B-4T-gguf model download in the official documentation.
 
-While the exact meaning of i2\_s isn't detailed in the available materials, it likely refers to an internal representation used by the bitnet.cpp kernels, possibly indicating a 2-bit storage scheme for the ternary weights and a specific handling of activation scaling (perhaps 's' for symmetric). 
+AI generated so probably wrong here:
+While the exact meaning of i2_s isn't detailed in the available materials, it likely refers to an internal representation used by the bitnet.cpp kernels, possibly indicating a 2-bit storage scheme for the ternary weights and a specific handling of activation scaling (perhaps 's' for symmetric). 
 
 It is crucial to use the quantization type specified alongside the model download, as using incorrect values could lead to build failures, runtime errors, or suboptimal performance. Developers should treat this as a required setting tied to the specific GGUF model being used.
 
@@ -145,26 +152,26 @@ The use of this Python script signifies that the build process is tightly integr
 ### **3.3 Executing the Build**
 
 Running the setup\_env.py script as shown above typically triggers the entire build process. The script configures CMake based on the detected environment and provided arguments, and then invokes the underlying build tool (e.g., make, Ninja, or MSBuild) to compile the C++ source code located primarily in the src/ directory.  
-Upon successful completion, compiled executables for inference and benchmarking should be present within a build directory (the exact location might be a standard build/ subdirectory or another location determined by the setup\_env.py script).
+Upon successful completion, compiled executables for inference and benchmarking should be present within a build directory (the exact location might be a standard build/ subdirectory or another location determined by the setup_env.py script).
 
 ## **4\. Running Inference with bitnet.cpp**
 
 Once bitnet.cpp is built successfully, you can perform inference using the provided Python wrapper script:
 
 ```bash
-run\_inference.py.
+run_inference.py.
 ```
 
-### **4.1 Overview of run\_inference.py**
+### **4.1 Overview of run_inference.py**
 
-The run\_inference.py script 7 serves as the primary user interface for running the compiled bitnet.cpp inference engine.7 It takes user input (like the prompt and configuration parameters) via command-line arguments and passes them to the C++ backend, handling the interaction and displaying the generated output. This Python wrapper provides a convenient way to use the optimized C++ core without needing direct C++ interaction for basic inference tasks.7
+The run\_inference.py script 7 serves as the primary user interface for running the compiled bitnet.cpp inference engine. It takes user input (like the prompt and configuration parameters) via command-line arguments and passes them to the C++ backend, handling the interaction and displaying the generated output. This Python wrapper provides a convenient way to use the optimized C++ core without needing direct C++ interaction for basic inference tasks.7
 
 ### **4.2 Command-Line Arguments**
 
 The run\_inference.py script accepts several arguments to control the inference process. You can view these options by running python:
 
 ```bash
-run\_inference.py \--help
+run_inference.py --help
 ```
 
 Key arguments include:
@@ -172,14 +179,14 @@ Key arguments include:
 ```plaintext
 | Argument | Required? | Description | Default Value |
 | :---- | :---- | :---- | :---- |
-| \-m MODEL, \--model MODEL | Yes | Path to the built/quantized GGUF model file. | N/A |
-| \-p PROMPT, \--prompt PROMPT | Yes | The initial text prompt for the model. | N/A |
-| \-n N\_PREDICT, \--n-predict N\_PREDICT | No | Number of tokens to predict when generating. | 128 |
-| \-t THREADS, \--threads THREADS | No | Number of CPU threads to use for inference. | 2 |
-| \-c CTX\_SIZE, \--ctx-size CTX\_SIZE | No | Context size for the model. | (Not specified) |
-| \-temp TEMPERATURE, \--temperature TEMPERATURE | No | Sampling temperature for generation. | (Not specified) |
-| \-cnv, \--conversation | No | Enable conversation mode (for instruct models). | False |
-| \-h, \--help | No | Show the help message and exit. | N/A |
+| -m MODEL, --model MODEL | Yes | Path to the built/quantized GGUF model file. | N/A |
+| -p PROMPT, --prompt PROMPT | Yes | The initial text prompt for the model. | N/A |
+| -n N_PREDICT, --n-predict N_PREDICT | No | Number of tokens to predict when generating. | 128 |
+| -t THREADS, --threads THREADS | No | Number of CPU threads to use for inference. | 2 |
+| -c CTX_SIZE, --ctx-size CTX_SIZE | No | Context size for the model. | (Not specified) |
+| -temp TEMPERATURE, --temperature TEMPERATURE | No | Sampling temperature for generation. | (Not specified) |
+| -cnv, --conversation | No | Enable conversation mode (for instruct models). | False |
+| -h, --help | No | Show the help message and exit. | N/A |
 ```
 
 *Note: The default values for CTX\_SIZE and TEMPERATURE are not explicitly stated in the provided usage snippets 7 but may be set within the script or the C++ backend. The BitNet b1.58 model itself has a maximum context length of 4096 tokens.8*
@@ -189,17 +196,17 @@ Key arguments include:
 Here are examples of how to use run\_inference.py:
 
 1. Basic Inference (Conversation Mode):  
-   This example uses the model downloaded and built previously, provides a simple prompt, and enables conversation mode, suitable for instruct-tuned models. Ensure the path to the model file (ggml-model-i2\_s.gguf) is correct based on where setup\_env.py placed it within the models/BitNet-b1.58-2B-4T directory.
+   This example uses the model downloaded and built previously, provides a simple prompt, and enables conversation mode, suitable for instruct-tuned models. Ensure the path to the model file (ggml-model-i2_s.gguf) is correct based on where setup\_env.py placed it within the models/BitNet-b1.58-2B-4T directory.
    
 ```bash  
-python run\_inference.py \-m models/BitNet-b1.58-2B-4T/ggml-model-i2\_s.gguf \-p "You are a helpful assistant" \-cnv
+python run_inference.py -m models/BitNet-b1.58-2B-4T/ggml-model-i2_s.gguf -p "You are a helpful assistant" -cnv
 ```
 
 3. Inference with Custom Parameters:  
    This example specifies the number of tokens to generate, the number of threads to use, and a sampling temperature.
    
 ```bash  
-python run\_inference.py \-m models/BitNet-b1.58-2B-4T/ggml-model-i2\_s.gguf \-p "Explain the concept of 1-bit LLMs in simple terms." \-n 256 \-t 4 \-temp 0.7
+python run_inference.py -m models/BitNet-b1.58-2B-4T/ggml-model-i2_s.gguf -p "Explain the concept of 1-bit LLMs in simple terms." -n 256 -t 4 -temp 0.7
 ```
 
 Adjust the parameters based on your specific needs and hardware capabilities. Increasing the number of threads (-t) can improve performance on multi-core CPUs, up to the number of available physical cores.
@@ -208,22 +215,22 @@ Adjust the parameters based on your specific needs and hardware capabilities. In
 
 To evaluate the inference speed and efficiency of bitnet.cpp on your specific hardware, the project provides a dedicated benchmarking script.
 
-### **5.1 Overview of utils/e2e\_benchmark.py**
+### **5.1 Overview of utils/e2e_benchmark.py**
 
-The e2e\_benchmark.py script, located in the utils/ directory is designed to measure the end-to-end performance of the inference process. It runs the model with specified parameters and reports metrics like tokens per second, allowing developers to assess the speed under different configurations (e.g., varying thread counts, prompt lengths, or generated token counts).
+The e2e_benchmark.py script, located in the utils/ directory is designed to measure the end-to-end performance of the inference process. It runs the model with specified parameters and reports metrics like tokens per second, allowing developers to assess the speed under different configurations (e.g., varying thread counts, prompt lengths, or generated token counts).
 
 ### **5.2 Command-Line Arguments**
 
-Similar to the inference script, e2e\_benchmark.py accepts command-line arguments. Run python utils/e2e\_benchmark.py \--help for details. Key arguments include:
+Similar to the inference script, e2e_benchmark.py accepts command-line arguments. Run python utils/e2e_benchmark.py --help for details. Key arguments include:
 
 ```plaintext
 | Argument | Required? | Description | Default Value |
 | :---- | :---- | :---- | :---- |
-| \-m MODEL, \--model MODEL | Yes | Path to the built/quantized GGUF model file. | N/A |
-| \-n N\_TOKEN, \--n-token N\_TOKEN | No | Number of tokens to *generate* during benchmark. | 128 |
-| \-p N\_PROMPT, \--n-prompt N\_PROMPT | No | Number of prompt tokens to process. | 512 |
-| \-t THREADS, \--threads THREADS | No | Number of CPU threads to use for benchmark. | 2 |
-| \-h, \--help | No | Show the help message and exit. | N/A |
+| -m MODEL, --model MODEL | Yes | Path to the built/quantized GGUF model file. | N/A |
+| -n N_TOKEN, --n-token N_TOKEN | No | Number of tokens to *generate* during benchmark. | 128 |
+| -p N_PROMPT, --n-prompt N_PROMPT | No | Number of prompt tokens to process. | 512 |
+| -t THREADS, --threads THREADS | No | Number of CPU threads to use for benchmark. | 2 |
+| -h, --help | No | Show the help message and exit. | N/A |
 ```
 
 ### **5.3 Practical Examples**
@@ -231,8 +238,7 @@ Similar to the inference script, e2e\_benchmark.py accepts command-line argument
 To run a benchmark test, use a command similar to the following, adjusting the parameters as needed:
 
 ```bash
-
-python utils/e2e\_benchmark.py \-m models/BitNet-b1.58-2B-4T/ggml-model-i2\_s.gguf \-n 200 \-p 256 \-t 4
+python utils/e2e_benchmark.py -m models/BitNet-b1.58-2B-4T/ggml-model-i2_s.gguf -n 200 -p 256 -t 4
 ```
 
 This command benchmarks the specified model, processing a prompt of 256 tokens, generating 200 tokens, and using 4 CPU threads. The output will typically include performance metrics like the time taken and the calculated tokens per second.
@@ -261,7 +267,7 @@ The microsoft/BitNet repository follows a reasonably standard structure for a C+
 
 * **Languages:** The performance-critical inference core is implemented in C++, while Python serves as a higher-level interface for setup, execution wrappers, and utility scripts. This split leverages C++ for speed and Python for ease of use. Developers aiming to modify the core inference logic will need C++ expertise, whereas using the framework is primarily done via the Python scripts.  
 * **Foundation:** The framework is explicitly built upon llama.cpp, inheriting its structure for handling GGUF models and likely adapting its core inference loop. It also incorporates lookup table optimization techniques inspired by T-MAC.  
-* **Build System:** CMake is used to configure and manage the C++ build process 7, orchestrated by the setup\_env.py script.
+* **Build System:** CMake is used to configure and manage the C++ build process 7, orchestrated by the setup_env.py script.
 
 ### **6.3 Implementing BitNet b1.58 Concepts**
 
@@ -278,7 +284,7 @@ Understanding these underlying technical details provides context for the C++ im
 
 Based on the structure and purpose, key components likely reside in:
 
-* src/: Core implementation files (e.g., bitnet.cpp, ggml\_kernels.cpp, model loading logic).  
+* src/: Core implementation files (e.g., bitnet.cpp, ggml_kernels.cpp, model loading logic).  
 * include/: Header files defining core data structures and function prototypes.  
 * utils/: Python scripts acting as the primary developer interface.  
 * 3rdparty/ggml/: The core tensor library inherited from llama.cpp.
@@ -289,7 +295,7 @@ The docs/ folder remains a potential source of more detailed architectural infor
 
 ### **7.1 Overview**
 
-For developers using the microsoft/BitNet repository as provided, the primary means of interaction—the effective "API"—is through the command-line interfaces (CLIs) of the Python scripts (setup\_env.py, run\_inference.py, e2e\_benchmark.py).  
+For developers using the microsoft/BitNet repository as provided, the primary means of interaction—the effective "API"—is through the command-line interfaces (CLIs) of the Python scripts (setup_env.py, run_inference.py, e2e_benchmark.py).  
 Based on the available documentation and code structure, there is **no documented Python library API** (e.g., importable modules for direct function calls) or **C++ library API** (e.g., linkable libraries for integration) exposed for embedding bitnet.cpp inference directly into other applications. Current usage requires executing the provided Python scripts as separate processes. Developers needing deeper integration would likely need to modify the C++ source code to expose a library interface or rely on inter-process communication.
 
 ### **7.2 Consolidated Argument Tables**
@@ -300,35 +306,35 @@ The following tables consolidate the command-line arguments for the key Python s
 ```plaintext
 | Argument | Required? | Description | Default Value |
 | :---- | :---- | :---- | :---- |
-| \-m MODEL, \--model MODEL | Yes | Path to the built/quantized GGUF model file. | N/A |
-| \-p PROMPT, \--prompt PROMPT | Yes | The initial text prompt for the model. | N/A |
-| \-n N\_PREDICT, \--n-predict N\_PREDICT | No | Number of tokens to predict when generating. | 128 |
-| \-t THREADS, \--threads THREADS | No | Number of CPU threads to use for inference. | 2 |
-| \-c CTX\_SIZE, \--ctx-size CTX\_SIZE | No | Context size for the model. | (Not specified) |
-| \-temp TEMPERATURE, \--temperature TEMPERATURE | No | Sampling temperature for generation. | (Not specified) |
-| \-cnv, \--conversation | No | Enable conversation mode (for instruct models). | False |
-| \-h, \--help | No | Show the help message and exit. | N/A |
+| -m MODEL, --model MODEL | Yes | Path to the built/quantized GGUF model file. | N/A |
+| -p PROMPT, --prompt PROMPT | Yes | The initial text prompt for the model. | N/A |
+| -n N_PREDICT, --n-predict N_PREDICT | No | Number of tokens to predict when generating. | 128 |
+| -t THREADS, --threads THREADS | No | Number of CPU threads to use for inference. | 2 |
+| -c CTX_SIZE, --ctx-size CTX_SIZE | No | Context size for the model. | (Not specified) |
+| -temp TEMPERATURE, --temperature TEMPERATURE | No | Sampling temperature for generation. | (Not specified) |
+| -cnv, --conversation | No | Enable conversation mode (for instruct models). | False |
+| -h, --help | No | Show the help message and exit. | N/A |
 
 **e2e\_benchmark.py Arguments:**
 
 | Argument | Required? | Description | Default Value |
 | :---- | :---- | :---- | :---- |
-| \-m MODEL, \--model MODEL | Yes | Path to the built/quantized GGUF model file. | N/A |
-| \-n N\_TOKEN, \--n-token N\_TOKEN | No | Number of tokens to *generate* during benchmark. | 128 |
-| \-p N\_PROMPT, \--n-prompt N\_PROMPT | No | Number of prompt tokens to process. | 512 |
-| \-t THREADS, \--threads THREADS | No | Number of CPU threads to use for benchmark. | 2 |
-| \-h, \--help | No | Show the help message and exit. | N/A |
+| -m MODEL, --model MODEL | Yes | Path to the built/quantized GGUF model file. | N/A |
+| -n N_TOKEN, --n-token N_TOKEN | No | Number of tokens to *generate* during benchmark. | 128 |
+| -p N_PROMPT, --n-prompt N_PROMPT | No | Number of prompt tokens to process. | 512 |
+| -t THREADS, --threads THREADS | No | Number of CPU threads to use for benchmark. | 2 |
+| -h, --help | No | Show the help message and exit. | N/A |
 
 **setup\_env.py Arguments (Partial):**
 
 | Argument | Required? | Description | Default Value |
 | :---- | :---- | :---- | :---- |
-| \-md DIR, \--model\_dir DIR | Yes | Path to the directory containing model files. | N/A |
-| \-q TYPE, \--quant\_type TYPE | Yes | Quantization type (e.g., i2\_s). | N/A |
-| \-h, \--help | No | Show the help message and exit. | N/A |
+| -md DIR, --model_dir DIR | Yes | Path to the directory containing model files. | N/A |
+| -q TYPE, --quant_type TYPE | Yes | Quantization type (e.g., i2_s). | N/A |
+| -h, --help | No | Show the help message and exit. | N/A |
 ```
 
-*(Note: setup\_env.py may have additional arguments not shown in the primary examples. Use \--help for a full list).*
+*(Note: setup_env.py may have additional arguments not shown in the primary examples. Use --help for a full list).*
 
 ## **8\. Contributing to the BitNet Project**
 
@@ -336,7 +342,7 @@ The microsoft/BitNet project is open-source under the MIT license 7 and appears 
 
 ### **8.1 Code of Conduct**
 
-The project has adopted the Microsoft Open Source Code of Conduct, detailed in the CODE\_OF\_CONDUCT.md file.7 This document outlines the standards for behavior within the community, aiming to foster an open and welcoming environment. All contributors are expected to adhere to these guidelines. Questions or concerns regarding the Code of Conduct can be directed to opencode@microsoft.com.23
+The project has adopted the Microsoft Open Source Code of Conduct, detailed in the CODE_OF_CONDUCT.md file.7 This document outlines the standards for behavior within the community, aiming to foster an open and welcoming environment. All contributors are expected to adhere to these guidelines. Questions or concerns regarding the Code of Conduct can be directed to opencode@microsoft.com.23
 
 ### **8.2 Reporting Security Issues**
 
