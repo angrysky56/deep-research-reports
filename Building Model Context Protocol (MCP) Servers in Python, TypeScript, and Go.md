@@ -406,6 +406,455 @@ Building an MCP server in Python, TypeScript/Node, or Go follows the same core p
 
 When creating a general-purpose MCP server, keep it modular and configurable so it can be adapted to various data sources or tasks. Adhere to the MCP specification so any improvements in the ecosystem benefit your server too. Following the best practices above – clear schema definitions, proper error handling, documentation, and thorough testing – will result in a developer-friendly and maintainable MCP server project. The goal is to make it as easy as possible for AI systems to connect to your server and for other developers (or your future self) to extend and maintain it. With this structure in place, you can rapidly build connectors to anything: from local databases to web services – standardizing how AI gets context and performs actions across all these systems [GitHub - modelcontextprotocol/python-sdk: The official Python SDK for Model Context Protocol servers and clients](https://github.com/modelcontextprotocol/python-sdk#:~:text=The%20Model%20Context%20Protocol%20,MCP%20servers%20can). Happy coding with MCP!
 
+# The Missing Link in MCP Servers: A Guide to Effective Prompt Engineering
+
+## Introduction: The 99% Problem
+
+Nearly all MCP (Model Context Protocol) servers suffer from a critical design flaw: their prompts are too generic, leaving AI assistants guessing about which tools to use and how to orchestrate them. This guide addresses this widespread issue and shows you how to create prompts that actually guide AI assistants effectively.
+
+## The Problem: Generic Prompts Don't Scale
+
+Most MCP servers define prompts like this:
+
+```python
+@mcp.prompt()
+async def analyze_data(data_source: str) -> str:
+    """Analyze data from the specified source"""
+    return f"Please analyze the data from {data_source}"
+```
+
+**Why this fails:**
+- AI doesn't know which specific tools to use
+- No guidance on tool orchestration
+- Missing error handling patterns
+- No fallback strategies
+
+When an AI assistant encounters this prompt, it has to guess which of possibly dozens of tools might be relevant. This leads to inefficient tool usage, failed attempts, and poor user experience.
+
+## The Solution: Tool-Orchestration Prompts
+
+Effective MCP prompts must:
+1. List specific tool names
+2. Provide step-by-step orchestration
+3. Include error handling guidance
+4. Offer fallback strategies
+
+Here's the improved pattern:
+
+```python
+@mcp.prompt()
+async def analyze_data(data_source: str) -> str:
+    """Analyze data using specific MCP tools"""
+    return f"""Analyze data from the specified source using MCP tools.
+
+TASK: Perform comprehensive data analysis on the provided source.
+
+DATA_SOURCE: {data_source}
+
+INSTRUCTIONS:
+1. Validate data source with 'check_data_availability' tool
+2. Load data using 'load_data_source':
+   - source: "{data_source}"
+   - format: auto-detect
+3. Generate analysis with 'run_analysis':
+   - analysis_type: "comprehensive"
+   - output_format: "report"
+4. If analysis fails, use 'get_error_details' for troubleshooting
+5. Save results with 'save_analysis_report'
+
+TOOLS TO USE:
+- check_data_availability: Verify data source exists
+- load_data_source: Load data into memory
+- run_analysis: Perform the actual analysis
+- get_error_details: Diagnose any issues
+- save_analysis_report: Store the results
+
+FALLBACK:
+If primary analysis fails, try 'basic_analysis' tool instead."""
+```
+
+## Step-by-Step Implementation Guide
+
+### 1. Audit Your Existing Tools
+
+First, create a comprehensive list of all tools in your MCP server:
+
+```python
+# List all tools for reference
+tools_inventory = {
+    "data_tools": [
+        "load_data",
+        "validate_data",
+        "transform_data"
+    ],
+    "analysis_tools": [
+        "statistical_analysis",
+        "generate_visualization",
+        "create_report"
+    ],
+    "utility_tools": [
+        "save_results",
+        "get_status",
+        "cleanup_temp_files"
+    ]
+}
+```
+
+### 2. Create a Prompt Template
+
+Develop a consistent template for all prompts:
+
+```python
+PROMPT_TEMPLATE = """
+{task_description}
+
+TASK: {specific_task}
+
+{parameters_section}
+
+INSTRUCTIONS:
+{numbered_steps}
+
+TOOLS TO USE:
+{tools_list}
+
+ERROR HANDLING:
+{error_guidance}
+
+FALLBACK:
+{fallback_strategy}
+"""
+```
+
+### 3. Map Workflows to Tools
+
+For each high-level task, identify the specific tool chain:
+
+```python
+workflow_mappings = {
+    "data_analysis": [
+        "validate_data_source",
+        "load_data",
+        "run_statistical_analysis",
+        "generate_visualization",
+        "create_report"
+    ],
+    "model_training": [
+        "prepare_dataset",
+        "configure_model",
+        "train_model",
+        "evaluate_performance",
+        "save_model"
+    ]
+}
+```
+
+### 4. Write Tool-Specific Prompts
+
+Transform each workflow into a detailed prompt:
+
+```python
+@mcp.prompt()
+async def data_analysis_workflow(
+    data_path: str,
+    analysis_type: str = "comprehensive"
+) -> str:
+    """Execute data analysis workflow with specific tools"""
+
+    # Get the relevant tools for this workflow
+    tools = workflow_mappings["data_analysis"]
+
+    return f"""Execute a complete data analysis workflow using MCP tools.
+
+TASK: Perform {analysis_type} analysis on the provided dataset.
+
+DATA_PATH: {data_path}
+ANALYSIS_TYPE: {analysis_type}
+
+INSTRUCTIONS:
+1. Validate data source exists using '{tools[0]}':
+   - path: "{data_path}"
+   - return_details: true
+
+2. Load the data with '{tools[1]}':
+   - source: "{data_path}"
+   - format: "auto"
+   - validate: true
+
+3. Run statistical analysis using '{tools[2]}':
+   - analysis_type: "{analysis_type}"
+   - confidence_level: 0.95
+
+4. Generate visualizations with '{tools[3]}':
+   - chart_types: ["distribution", "correlation", "trends"]
+   - output_format: "png"
+
+5. Create final report using '{tools[4]}':
+   - include_visualizations: true
+   - format: "markdown"
+   - summary_level: "executive"
+
+TOOLS TO USE:
+- {tools[0]}: Ensures data source is accessible
+- {tools[1]}: Loads data into working memory
+- {tools[2]}: Performs statistical computations
+- {tools[3]}: Creates visual representations
+- {tools[4]}: Compiles everything into a report
+
+ERROR HANDLING:
+- If data validation fails: Check file permissions and path
+- If loading fails: Try alternative formats (csv, json, parquet)
+- If analysis fails: Reduce dataset size or use sampling
+
+FALLBACK:
+If comprehensive analysis fails, fall back to 'quick_analysis' tool."""
+```
+
+### 5. Add Context and Best Practices
+
+Include domain-specific knowledge in prompts:
+
+```python
+@mcp.prompt()
+async def optimize_model(
+    model_id: str,
+    optimization_goal: str = "accuracy"
+) -> str:
+    """Optimize ML model with domain-aware guidance"""
+
+    return f"""Optimize a machine learning model using MCP tools.
+
+TASK: Improve model performance based on {optimization_goal}.
+
+MODEL_ID: {model_id}
+OPTIMIZATION_GOAL: {optimization_goal}
+
+CONTEXT:
+This optimization focuses on {optimization_goal}. Consider trade-offs:
+- Accuracy vs. Speed
+- Precision vs. Recall
+- Model size vs. Performance
+
+INSTRUCTIONS:
+1. Load current model with 'load_model':
+   - model_id: "{model_id}"
+   - include_metadata: true
+
+2. Analyze baseline performance using 'evaluate_model':
+   - metrics: ["accuracy", "precision", "recall", "f1", "latency"]
+   - test_dataset: "standard_test"
+
+3. Apply optimization with 'optimize_model':
+   - strategy: "{optimization_goal}_focused"
+   - iterations: 10
+   - early_stopping: true
+
+4. Compare results using 'compare_models':
+   - original: "{model_id}"
+   - optimized: "optimized_{model_id}"
+   - visualize: true
+
+5. Save optimized model with 'save_model':
+   - model_id: "optimized_{model_id}"
+   - versioning: true
+
+TOOLS TO USE:
+- load_model: Retrieves model and configuration
+- evaluate_model: Measures current performance
+- optimize_model: Applies optimization techniques
+- compare_models: Shows before/after comparison
+- save_model: Persists improved model
+
+OPTIMIZATION TIPS:
+- For accuracy: Focus on hyperparameter tuning
+- For speed: Consider model pruning or quantization
+- For memory: Apply model compression techniques
+
+FALLBACK:
+If optimization fails, try 'incremental_optimization' with smaller steps."""
+```
+
+## Best Practices
+
+### 1. Be Explicit About Tool Names
+
+❌ **Bad:**
+```python
+"Analyze the data and create a report"
+```
+
+✅ **Good:**
+```python
+"Use 'data_analyzer' tool to process the data, then 'report_generator' to create the report"
+```
+
+### 2. Provide Parameter Guidance
+
+❌ **Bad:**
+```python
+"Process the file with appropriate settings"
+```
+
+✅ **Good:**
+```python
+"Process the file using 'file_processor' with:
+- format: 'csv'
+- delimiter: ','
+- encoding: 'utf-8'
+- error_handling: 'skip'"
+```
+
+### 3. Include Error Handling
+
+❌ **Bad:**
+```python
+"Run the analysis"
+```
+
+✅ **Good:**
+```python
+"Run the analysis with 'analyzer' tool:
+- If timeout occurs, increase timeout parameter
+- If memory error, use 'chunked_analyzer' instead
+- Log errors with 'error_logger' for debugging"
+```
+
+### 4. Chain Tools Explicitly
+
+❌ **Bad:**
+```python
+"Complete the workflow"
+```
+
+✅ **Good:**
+```python
+"Execute workflow in sequence:
+1. 'validate_input' -> Get validation_id
+2. 'process_data' with validation_id -> Get process_id
+3. 'generate_output' with process_id -> Get output_path
+4. 'cleanup_temp' with process_id"
+```
+
+## Advanced Patterns
+
+### 1. Conditional Workflows
+
+```python
+@mcp.prompt()
+async def adaptive_processing(data_size: str) -> str:
+    """Adapt processing based on data size"""
+
+    return f"""Process data with size-appropriate tools.
+
+DATA_SIZE: {data_size}
+
+INSTRUCTIONS:
+1. Check data size with 'get_data_metrics'
+2. Based on size:
+   - Small (<1GB): Use 'memory_processor'
+   - Medium (1-10GB): Use 'streaming_processor'
+   - Large (>10GB): Use 'distributed_processor'
+3. Monitor progress with 'job_monitor'
+4. Handle results with appropriate storage:
+   - Small results: 'store_in_memory'
+   - Large results: 'store_to_disk'
+
+TOOLS TO USE:
+- get_data_metrics: Determine data characteristics
+- memory_processor: Fast in-memory processing
+- streaming_processor: Chunk-based processing
+- distributed_processor: Parallel processing
+- job_monitor: Track processing progress
+- store_in_memory: Quick result access
+- store_to_disk: Persistent storage"""
+```
+
+### 2. Recovery Workflows
+
+```python
+@mcp.prompt()
+async def robust_operation(task_id: str) -> str:
+    """Operation with built-in recovery"""
+
+    return f"""Execute task with automatic recovery.
+
+TASK_ID: {task_id}
+
+INSTRUCTIONS:
+1. Create checkpoint with 'save_checkpoint':
+   - task_id: "{task_id}"
+   - stage: "initial"
+
+2. Execute main operation with 'run_task':
+   - task_id: "{task_id}"
+   - timeout: 300
+
+3. If task fails:
+   a. Load checkpoint with 'restore_checkpoint'
+   b. Analyze failure with 'diagnose_error'
+   c. Apply fix with 'apply_recovery'
+   d. Retry with 'run_task' (reduced scope)
+
+4. Verify results with 'validate_output'
+
+5. Clean up with 'cleanup_resources'
+
+TOOLS TO USE:
+- save_checkpoint: Create recovery points
+- run_task: Execute main operation
+- restore_checkpoint: Return to safe state
+- diagnose_error: Understand failure
+- apply_recovery: Fix issues
+- validate_output: Ensure correctness
+- cleanup_resources: Remove temporary data"""
+```
+
+## Testing Your Prompts
+
+Create a systematic approach to validate your prompts:
+
+```python
+def test_prompt_completeness(prompt_function):
+    """Validate prompt has all required components"""
+
+    prompt_text = prompt_function("test_param")
+
+    required_sections = [
+        "TASK:",
+        "INSTRUCTIONS:",
+        "TOOLS TO USE:",
+    ]
+
+    for section in required_sections:
+        assert section in prompt_text, f"Missing {section}"
+
+    # Check for specific tool mentions
+    tool_pattern = r"'[a-z_]+'"  # Tool names in quotes
+    tools_found = re.findall(tool_pattern, prompt_text)
+    assert len(tools_found) > 0, "No specific tools mentioned"
+
+    # Verify tools actually exist
+    for tool in tools_found:
+        tool_name = tool.strip("'")
+        assert tool_name in registered_tools, f"Unknown tool: {tool_name}"
+```
+
+## Conclusion
+
+Effective MCP prompts are not just descriptions of tasks—they're detailed orchestration scripts that guide AI assistants through complex tool chains. By following this guide, you can transform your MCP server from a collection of tools into a cohesive system that AI assistants can navigate confidently.
+
+Remember: The goal is to eliminate guesswork. Every prompt should provide a clear path from task to completion, with specific tools, parameters, and fallback strategies clearly defined.
+
+### Key Takeaways:
+
+1. **Always list specific tool names** - Never make AI guess
+2. **Provide step-by-step orchestration** - Show how tools connect
+3. **Include error handling** - Plan for failures
+4. **Add context and tips** - Share domain knowledge
+5. **Test systematically** - Validate prompt completeness
+
+By implementing these practices, your MCP server will become significantly more useful to AI assistants, leading to better user experiences and more reliable automation.
+
 **Sources:**
 
 - Anthropic, *Model Context Protocol (MCP) Introduction and Quickstart*
