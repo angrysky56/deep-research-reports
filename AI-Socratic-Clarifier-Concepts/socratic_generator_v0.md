@@ -131,5 +131,3 @@ for issue_type, term in detected_issues:
 - **Multi-agent coordination:** Integrate with **fact-checking AI** to provide real-time evidence.
 - **User preferences:** Allow users to adjust sensitivity for different contexts (academic, casual, legal).
 - **Interactive dialogue:** Enable users to answer Socratic questions and refine their text iteratively.
-
-Would you like to integrate **adaptive feedback learning**, where AI refines its questioning based on user responses? 🚀
