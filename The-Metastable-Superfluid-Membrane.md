@@ -112,11 +112,11 @@ To provide a geometric basis for the vacuum's microstructure, we integrate the *
 
 ### **6.1 The Torsional Dialectic**
 
-The fundamental operational principle is $\\text{Emergence} \= \\text{Structure} \\times \\text{Change}$, represented mathematically as $E \= (T \\cdot P) \\times |T \- P|$.30
+The fundamental operational principle is $\\text{Emergence} \= \\text{Structure} \\times \\text{Change}$, represented mathematically as $E \= (T \\cdot P) \\times |T \- P|$.30 To ground this in the hydrodynamic ontology of the superfluid vacuum, we explicitly link these geometric modes to the dynamics of a vortex ring:
 
-* **Toroidal (T):** Represents expansion, divergence, and vacuum energy (outward flow).  
-* **Poloidal (P):** Represents contraction, convergence, and mass generation (inward structure).  
-* **Emergence (E):** The interaction of these modes creates physical reality.
+* **Toroidal (T) Mode:** Corresponds to the **circulation** of the knot—the ring itself. In the vacuum dialectic, this represents expansion, divergence, and the outward flow of vacuum energy (analogous to the expanding radius of a vortex ring).  
+* **Poloidal (P) Mode:** Corresponds to the **flux** flowing through the ring. This represents contraction, convergence, and the inward structural confinement that generates mass (analogous to the rolling motion of the fluid through the ring's center).  
+* **Emergence (E):** The interaction of these orthogonal flows creates physical reality.
 
 In this framework, gravity is reinterpreted not as a fundamental force but as the geometric shear resulting from P-dominant mass knots interacting with a T-dominant vacuum.32 A planet is a "multi-layered P-knot" where each layer contributes a contraction shell. Free fall is described as "surfing" the T-field flow of the vacuum rather than being pulled by a force.
 
